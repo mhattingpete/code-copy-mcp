@@ -2,6 +2,31 @@
 
 A Model Context Protocol (MCP) server that enables code copy-paste operations between files with security controls and validation.
 
+## Table of Contents
+
+- [Features](#features)
+- [Tools](#tools)
+- [Installation & Configuration](#installation--configuration)
+  - [Prerequisites](#prerequisites)
+  - [Quick Setup](#quick-setup)
+- [MCP Client Integration](#mcp-client-integration)
+  - [1. Claude Desktop](#1-claude-desktop)
+  - [2. Cursor (AI Code Editor)](#2-cursor-ai-code-editor)
+  - [3. Claude Code (VS Code Extension)](#3-claude-code-vs-code-extension)
+  - [4. Other MCP-Compatible Clients](#4-other-mcp-compatible-clients)
+- [Configuration](#configuration)
+  - [Environment Variables](#environment-variables)
+  - [Security Configuration](#security-configuration)
+  - [Troubleshooting](#troubleshooting)
+- [Usage Examples](#usage-examples)
+  - [Example 1: Copy function from one file to another](#example-1-copy-function-from-one-file-to-another)
+  - [Example 2: Replace code with backup](#example-2-replace-code-with-backup)
+  - [Example 3: Copy entire file](#example-3-copy-entire-file)
+- [Security Features](#security-features)
+- [Project Structure](#project-structure)
+- [Dependencies](#dependencies)
+- [Logging](#logging)
+
 ## Features
 
 - **Line-by-line code copying**: Extract specific line ranges from source files
@@ -150,20 +175,196 @@ If not specified, defaults to:
    get_file_info("/path/to/target.py")
    ```
 
-## Integration with Claude Desktop
+## Installation & Configuration
 
-Add to Claude Desktop configuration:
+### Prerequisites
+- Python 3.11 or higher
+- UV package manager (recommended) or pip
+- One of the supported MCP clients
+
+### Quick Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/mhattingpete/code-copy-mcp.git
+   cd code-copy-mcp
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   uv install
+   # Or without UV: pip install -e .
+   ```
+
+3. **Configure allowed directories (optional):**
+   ```bash
+   cp .env.example .env
+   # Edit .env to set your ALLOWED_DIRECTORIES
+   ```
+
+## MCP Client Integration
+
+### 1. Claude Desktop
+
+Add to your Claude Desktop configuration file:
+
+**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
 {
   "mcpServers": {
     "code-copy": {
       "command": "uv",
-      "args": ["run", "python", "/path/to/code-copy-mcp/mcp_server.py"]
+      "args": ["run", "python", "/full/path/to/code-copy-mcp/mcp_server.py"],
+      "env": {
+        "ALLOWED_DIRECTORIES": "/Users/yourname,/Users/yourname/Documents,/Users/yourname/Projects"
+      }
     }
   }
 }
 ```
+
+*Alternative without UV:*
+```json
+{
+  "mcpServers": {
+    "code-copy": {
+      "command": "python",
+      "args": ["/full/path/to/code-copy-mcp/mcp_server.py"],
+      "env": {
+        "ALLOWED_DIRECTORIES": "/Users/yourname,/Users/yourname/Documents,/Users/yourname/Projects"
+      }
+    }
+  }
+}
+```
+
+### 2. Cursor (AI Code Editor)
+
+1. Open Cursor settings (`Cmd/Ctrl + ,`)
+2. Navigate to `Extensions` → `MCP Servers`
+3. Add new server:
+   ```
+   Name: Code Copy MCP
+   Command: uv
+   Arguments: run python /full/path/to/code-copy-mcp/mcp_server.py
+   Environment Variables:
+     ALLOWED_DIRECTORIES=/Users/yourname,/Users/yourname/Documents,/Users/yourname/Projects
+   ```
+
+### 3. Claude Code (VS Code Extension)
+
+1. Install the Claude Code extension for VS Code
+2. Open VS Code settings (`Cmd/Ctrl + ,`)
+3. Search for "Claude MCP"
+4. Add server configuration:
+   ```json
+   {
+     "name": "code-copy",
+     "command": "uv",
+     "args": ["run", "python", "/full/path/to/code-copy-mcp/mcp_server.py"],
+     "env": {
+       "ALLOWED_DIRECTORIES": "/Users/yourname,/Users/yourname/Documents,/Users/yourname/Projects"
+     }
+   }
+   ```
+
+### 4. Other MCP-Compatible Clients
+
+For other MCP clients, use this generic configuration:
+
+**Command:** `uv run python /path/to/code-copy-mcp/mcp_server.py`
+**Alternative:** `python /path/to/code-copy-mcp/mcp_server.py`
+
+**Environment Variables:**
+```json
+{
+  "ALLOWED_DIRECTORIES": "/path/to/allowed/directory1,/path/to/allowed/directory2"
+}
+```
+
+## Configuration
+
+### Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+# Comma-separated list of directories where file operations are allowed
+# Examples for different operating systems:
+
+# macOS/Linux:
+ALLOWED_DIRECTORIES=/Users/yourname,/Users/yourname/Documents,/Users/yourname/Projects
+
+# Windows:
+ALLOWED_DIRECTORIES=C:\Users\YourName,C:\Users\YourName\Documents,C:\Users\YourName\Projects
+
+# If not specified, defaults to:
+# - User's home directory
+# - Documents folder  
+# - Desktop folder
+# - Projects folder (if exists)
+```
+
+### Security Configuration
+
+The server only allows operations within the specified directories for security reasons. 
+Make sure to include all directories where you want to perform code copy-paste operations.
+
+### Troubleshooting
+
+**Common Issues:**
+
+1. **"Module not found" errors:**
+   ```bash
+   # Ensure dependencies are installed
+   uv install
+   # Or with pip:
+   pip install -e .
+   ```
+
+2. **Permission denied errors:**
+   - Check that the allowed directories are correctly configured
+   - Ensure the directories exist and are accessible
+
+3. **MCP Server not appearing:**
+   - Verify the command path is correct
+   - Check the client's logs for error messages
+   - Restart the MCP client after configuration changes
+
+## Usage Examples
+
+Once configured, you can use the tools within your MCP client:
+
+### Example 1: Copy function from one file to another
+```
+User: Copy the function calculate_total from utils.py and paste it into main.py at line 50
+```
+
+The assistant will:
+1. Use `get_file_info` to examine the files
+2. Use `copy_code` with appropriate line numbers
+3. Use `paste_code` at the specified location
+
+### Example 2: Replace code with backup
+```
+User: Replace all occurrences of "old_method" with "new_method" in all Python files and create backups
+```
+
+The assistant will:
+1. Use `search_and_replace` on each file
+2. Verify changes with `get_file_info`
+3. Report the modifications made
+
+### Example 3: Copy entire file
+```
+User: Make a copy of template.py as new_template.py
+```
+
+The assistant will:
+1. Use `copy_entire_file` to get the content
+2. Use `paste_code` to create the new file
 
 ## Project Structure
 
