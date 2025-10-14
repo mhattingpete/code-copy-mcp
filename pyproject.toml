@@ -1,0 +1,11 @@
+[project]
+name = "code-copy-mcp"
+version = "0.1.0"
+description = "MCP server for code copy-paste operations between files with security controls"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastmcp>=2.12.4",
+    "loguru>=0.7.3",
+    "python-dotenv>=1.1.1",
+]
