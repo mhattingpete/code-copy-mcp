@@ -12,8 +12,7 @@ A Model Context Protocol (MCP) server that enables code copy-paste operations be
 - [MCP Client Integration](#mcp-client-integration)
   - [1. Claude Desktop](#1-claude-desktop)
   - [2. Cursor (AI Code Editor)](#2-cursor-ai-code-editor)
-  - [3. Claude Code (VS Code Extension)](#3-claude-code-vs-code-extension)
-  - [4. Other MCP-Compatible Clients](#4-other-mcp-compatible-clients)
+  - [3. Claude Code](#3-claude-code)
 - [Configuration](#configuration)
   - [Environment Variables](#environment-variables)
   - [Security Configuration](#security-configuration)
@@ -192,7 +191,7 @@ If not specified, defaults to:
 
 2. **Install dependencies:**
    ```bash
-   uv install
+   uv sync
    # Or without UV: pip install -e .
    ```
 
@@ -215,23 +214,8 @@ Add to your Claude Desktop configuration file:
 {
   "mcpServers": {
     "code-copy": {
-      "command": "uv",
-      "args": ["run", "python", "/full/path/to/code-copy-mcp/mcp_server.py"],
-      "env": {
-        "ALLOWED_DIRECTORIES": "/Users/yourname,/Users/yourname/Documents,/Users/yourname/Projects"
-      }
-    }
-  }
-}
-```
-
-*Alternative without UV:*
-```json
-{
-  "mcpServers": {
-    "code-copy": {
-      "command": "python",
-      "args": ["/full/path/to/code-copy-mcp/mcp_server.py"],
+      "command": "/full/path/to/uv",
+      "args": ["--directory", "/full/path/to/code-copy-mcp", "run", "python", "mcp_server.py"],
       "env": {
         "ALLOWED_DIRECTORIES": "/Users/yourname,/Users/yourname/Documents,/Users/yourname/Projects"
       }
@@ -247,42 +231,19 @@ Add to your Claude Desktop configuration file:
 3. Add new server:
    ```
    Name: Code Copy MCP
-   Command: uv
-   Arguments: run python /full/path/to/code-copy-mcp/mcp_server.py
+   Command: full/path/to/uv
+   Arguments: --directory /full/path/to/code-copy-mcp run python mcp_server.py
    Environment Variables:
      ALLOWED_DIRECTORIES=/Users/yourname,/Users/yourname/Documents,/Users/yourname/Projects
    ```
 
-### 3. Claude Code (VS Code Extension)
+### 3. Claude Code
 
-1. Install the Claude Code extension for VS Code
-2. Open VS Code settings (`Cmd/Ctrl + ,`)
-3. Search for "Claude MCP"
-4. Add server configuration:
-   ```json
-   {
-     "name": "code-copy",
-     "command": "uv",
-     "args": ["run", "python", "/full/path/to/code-copy-mcp/mcp_server.py"],
-     "env": {
-       "ALLOWED_DIRECTORIES": "/Users/yourname,/Users/yourname/Documents,/Users/yourname/Projects"
-     }
-   }
+1. Install the Claude Code
+2. Add server configuration:
+   ```bash
+   claude mcp add-json code-copy '{"type":"stdio","command":"full/path/to/uv","args":["--directory", "/full/path/to/code-copy-mcp", "run", "python", "mcp_server.py"],"env": {"ALLOWED_DIRECTORIES": "/Users/yourname,/Users/yourname/Documents,/Users/yourname/Projects"}}'
    ```
-
-### 4. Other MCP-Compatible Clients
-
-For other MCP clients, use this generic configuration:
-
-**Command:** `uv run python /path/to/code-copy-mcp/mcp_server.py`
-**Alternative:** `python /path/to/code-copy-mcp/mcp_server.py`
-
-**Environment Variables:**
-```json
-{
-  "ALLOWED_DIRECTORIES": "/path/to/allowed/directory1,/path/to/allowed/directory2"
-}
-```
 
 ## Configuration
 
